@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>基本信息</title>
+        <meta name="renderer" content="webkit">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta name="viewport" content="width=device-width,user-scalable=yes, minimum-scale=0.4, initial-scale=0.8,target-densitydpi=low-dpi" />
+        <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+        <link rel="stylesheet" href="/css/font.css">
+        <link rel="stylesheet" href="/css/xadmin.css">
+        <script type="text/javascript" src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+        <script type="text/javascript" src="/lib/layui/layui.js" charset="utf-8"></script>
+        <script type="text/javascript" src="/js/xadmin.js"></script>
+        <!-- 让IE8/9支持媒体查询，从而兼容栅格 -->
+        <!--[if lt IE 9]>
+        <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
+        <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
+    </head>
+    <body>
+    <div class="x-body layui-anim layui-anim-up">
+        <fieldset class="layui-elem-field">
+            <legend>基本信息</legend>
+            <div class="layui-field-box">
+                <table class="layui-table">
+                    <tbody id="tbody-add">
+                        <tr>
+                            <th>xxx版本</th>
+                            <td>1.0.180420</td></tr>
+                        <tr>
+                            <th>服务器地址</th>
+                            <td>x.xuebingsi.com</td></tr>
+                        <tr>
+                            <th>操作系统</th>
+                            <td>WINNT</td></tr>
+                        <tr>
+                            <th>运行环境</th>
+                            <td>Apache/2.4.23 (Win32) OpenSSL/1.0.2j mod_fcgid/2.3.9</td></tr>
+                        <tr>
+                            <th>PHP版本</th>
+                            <td>5.6.27</td></tr>
+                        <tr>
+                            <th>PHP运行方式</th>
+                            <td>cgi-fcgi</td></tr>
+                        <tr>
+                            <th>MYSQL版本</th>
+                            <td>5.5.53</td></tr>
+                        <tr>
+                            <th>ThinkPHP</th>
+                            <td>5.0.18</td></tr>
+                        <tr>
+                            <th>上传附件限制</th>
+                            <td>2M</td></tr>
+                        <tr>
+                            <th>执行时间限制</th>
+                            <td>30s</td></tr>
+                        <tr>
+                            <th>剩余空间</th>
+                            <td>86015.2M</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </fieldset>
+    </div>
+    </body>
+    <style>
+        th{
+            color: rgb(0, 150, 136);
+            width: 200px;
+        }
+
+    </style>
+
+    <script>
+        //获取传递的id
+        let id = "[[${#request.getParameter('id')}]]";
+
+        $(function () {
+            //获取数据列表
+            $.ajax({
+                type: "post",
+                url: "/scanData/scanDetail",
+                data: {id:id},
+                dataType: "json",
+                success: function (data) {
+                    console.log(data);
+                    if (data.code === 200) {
+                        //将详情转换成标准的json格式
+                        let strData = data.data.data;
+                        strData = strData.replace(/'/g,"\"");
+                        let jsonData = jQuery.parseJSON(strData);
+
+                        //清空对象
+                        $("#tbody-add").empty();
+                        //遍历json对象
+                        for (let key in jsonData){
+                            let tr = $('<tr>\n' +
+                                '           <th>'+key+'</th>\n' +
+                                '           <td>'+jsonData[key]+'</td></tr>\n' +
+                                '       <tr>');
+                            //添加对象
+                            $("#tbody-add").append(tr);
+                        }
+                    }
+                }
+            })
+        })
+
+    </script>
+</html>

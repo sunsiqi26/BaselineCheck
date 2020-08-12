@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+  
+  <head>
+    <meta charset="UTF-8">
+    <title>设备列表</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width,user-scalable=yes, minimum-scale=0.4, initial-scale=0.8,target-densitydpi=low-dpi" />
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="/css/font.css">
+    <link rel="stylesheet" href="/css/xadmin.css">
+    <script type="text/javascript" src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+    <script type="text/javascript" src="/lib/layui/layui.js" charset="utf-8"></script>
+    <script type="text/javascript" src="/js/xadmin.js"></script>
+    <!-- 让IE8/9支持媒体查询，从而兼容栅格 -->
+    <!--[if lt IE 9]>
+      <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
+      <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  
+  <body>
+    <div class="x-nav">
+      <span class="layui-breadcrumb">
+        <a href="">首页</a>
+        <a href="">设备</a>
+        <a>
+          <cite>设备列表</cite></a>
+      </span>
+      <a class="layui-btn layui-btn-small" style="line-height:1.6em;margin-top:3px;float:right" href="javascript:location.replace(location.href);" title="刷新">
+        <i class="layui-icon" style="line-height:30px">ဂ</i></a>
+    </div>
+    <div class="x-body">
+      <div class="layui-row">
+        <form class="layui-form layui-col-md12 x-so">
+          <input class="layui-input" placeholder="开始日（注册时间）" name="start" id="start">
+          <input class="layui-input" placeholder="截止日（注册时间）" name="end" id="end">
+          <input type="text" name="username"  placeholder="请输入关键字" autocomplete="off" class="layui-input">
+          <button class="layui-btn"  lay-submit="" lay-filter="search"><i class="layui-icon">&#xe615;</i></button>
+        </form>
+      </div>
+      <xblock>
+        <button class="layui-btn layui-btn-danger" onclick="delAll()"><i class="layui-icon"></i>批量删除</button>
+        <span class="x-right" style="line-height:40px">共有数据：<span id="total"></span> 条</span>
+      </xblock>
+      <table class="layui-table">
+        <thead>
+          <tr>
+            <th>
+              <div class="layui-unselect header layui-form-checkbox" lay-skin="primary"><i class="layui-icon">&#xe605;</i></div>
+            </th>
+            <th>ID</th>
+            <th>主板ID</th>
+            <th>设备名</th>
+            <th>注册时间</th>
+            <th>更新时间</th>
+            <th>操作</th>
+        </thead>
+        <tbody id="tbody-add">
+          <tr>
+            <td>
+              <div class="layui-unselect layui-form-checkbox" lay-skin="primary" data-id='2'><i class="layui-icon">&#xe605;</i></div>
+            </td>
+            <th>ID</th>
+            <td>主板ID</td>
+            <td>设备名</td>
+            <td>时间</td>
+            <td>时间</td>
+            <td class="td-manage">
+              <a title="扫描类型列表" href="javascript:;">
+                <i class="layui-icon">&#xe656;</i>
+              </a>
+              <a title="删除" onclick="member_del(this,'要删除的id')" href="javascript:;">
+                <i class="layui-icon">&#xe640;</i>
+              </a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="page">
+        <div>
+          <a class="prev" href="">&lt;&lt;</a>
+          <a class="num" href="">1</a>
+          <span class="current">2</span>
+          <a class="num" href="">3</a>
+          <a class="next" href="">&gt;&gt;</a>
+        </div>
+      </div>
+
+    </div>
+    <script>
+      layui.use(['laydate','form'], function(){
+        var laydate = layui.laydate;
+        let form = layui.form;
+
+        //执行一个laydate实例
+        laydate.render({
+          elem: '#start' //指定元素
+        });
+
+        //执行一个laydate实例
+        laydate.render({
+          elem: '#end' //指定元素
+        });
+
+        form.on('submit(search)', function(data){
+          getPageData(1,pageSize);
+          return false;
+        });
+
+      });
+
+      /*设备-删除*/
+      function member_del(obj,id){
+          layer.confirm('确认要删除吗？',function(index){
+            $.ajax({
+              type:"post",
+              url:"/device/delete",
+              data:{ids:[id]},
+              dataType:"json",
+              success:function (res){
+                layer.msg("已删除", {icon: res.code===200 ? 1:2,time:1000},function () {
+                  $(obj).parents("tr").remove();
+                  getPageData(nowPage,pageSize);
+                });
+              }
+            })
+
+          });
+      }
+
+      /*设备-批量删除*/
+      function delAll (argument) {
+        // 需要删除的数据的id数组
+        let data = tableCheck.getData();
+
+        layer.confirm('确认要删除吗？',function(index){
+          $.ajax({
+            type:"post",
+            url:"/device/delete",
+            data:{ids:data},
+            dataType:"json",
+            success:function (res){
+                layer.msg(res.msg, {icon: res.code===200 ? 1:2},function () {
+                  $(".layui-form-checked").not('.header').parents('tr').remove();
+                  getPageData(nowPage,pageSize);
+                });
+            }
+          })
+        });
+      }
+
+      //########################################分页代码#################################################
+      let nowPage = 1;
+      let pageSize = 5;
+
+      //初始化分页
+      function initPages(data) {
+        let div = $("<div></div>");
+        let pre = $('<a class="prev" pre-page="'+data.prePage+'" has-prev-page="'+data.hasPreviousPage+'" href="javascript:prePage();">&lt;&lt;</a>');
+        div.append(pre);
+        // 动态的渲染页数
+        $(data.navigatepageNums).each(function () {
+          let pageA;
+          //如果当前正显示此页
+          if(data.pageNum == this){
+            pageA = $('<span class="current">'+this+'</span>');
+          }else{
+            pageA = $('<a class="num" href="javascript:changePage('+this+');">'+this+'</a>');
+          }
+          div.append(pageA);
+        });
+        let next = $('<a class="next" next-page="'+data.nextPage+'" has-next-page="'+data.hasNextPage+'" href="javascript:nextPage();">&gt;&gt;</a>');
+        div.append(next);
+        $(".page").empty();
+        $(".page").append(div);
+      }
+
+      //上一页
+      function prePage(){
+        let hasPrevPage = $(".prev").attr("has-prev-page");
+        let prevPageNum = $(".prev").attr("pre-page");
+
+        if(hasPrevPage === "true"){
+          getPageData(prevPageNum, pageSize);
+        }else{
+          layer.msg("已在首页");
+        }
+      }
+
+      //下一页
+      function nextPage() {
+        let hasNextPage = $(".next").attr("has-next-page");
+        let nextPageNum = $(".next").attr("next-page");
+
+        if(hasNextPage === "true"){
+          getPageData(nextPageNum, pageSize);
+        }else{
+          layer.msg("已在末尾");
+        }
+      }
+
+      //中间页跳转
+      function changePage(page) {
+        getPageData(page, pageSize);
+      }
+
+      //获取查询条件
+      function getCondition() {
+        let data = {};
+        // 获取开始时间
+        let startTime = $("#start").val();
+        if(startTime.length > 0)
+          data.startTime = startTime+" 00:00:00";
+        // 获取结束时间
+        let endTime = $("#end").val();
+        if(endTime.length > 0)
+          //按照一般逻辑+23:59:59取到当天数据
+          data.endTime = endTime+" 23:59:59";
+        // 获取关键字
+        let keywords = $("input[name=username]").val();
+        if(keywords.length > 0)
+          data.keywords = keywords;
+        return data;
+      }
+      //查询数据的方法
+      function getPageData(page, pageSize){
+        let condition = getCondition();
+        // 加上分页条件
+        condition.page = page;
+        condition.pageSize = pageSize;
+        //获取数据列表
+        $.ajax({
+          type:"post",
+          url:"/device/List",
+          data:condition,
+          dataType:"json",
+          success:function (data) {
+            if (data.code===200){
+              //显示总条数
+              $("#total").text(data.data.total);
+              //获取当前页
+              nowPage=data.data.pageNum;
+              //清空对象
+              $("#tbody-add").empty();
+
+              //遍历返回数据，生成搜索结果列表
+              $(data.data.list).each(function () {
+                let tr=$('<tr>\n' +
+                        '            <td>\n' +
+                        '            <div class="layui-unselect layui-form-checkbox" lay-skin="primary" data-id=\'' +
+                        this.id+
+                        '            \'><i class="layui-icon">&#xe605;</i></div>\n' +
+                        '            </td>\n' +
+                        '            <td>'+this.id+'</td>\n' +
+                        '            <td>'+this.boardId+'</td>\n' +
+                        '            <td>'+this.computerName+'</td>\n' +
+                        '            <td>'+this.createTime+'</td>\n' +
+                        '            <td>'+this.updateTime+'</td>\n' +
+                        '            <td class="td-manage">\n' +
+                        '              <a title="扫描类型-'+this.computerName+'"  onclick _href="scanData/typeList?boardId='+this.boardId+'" class="open_new_tab">\n' +
+                        '                <i class="layui-icon">&#xe656;</i>\n' +
+                        '              </a>\n' +
+                        '              <a title="删除" onclick="member_del(this,'+this.id+')" href="javascript:;">\n' +
+                        '                <i class="layui-icon">&#xe640;</i>\n' +
+                        '              </a>\n' +
+                        '            </td>\n' +
+                        '          </tr>');
+                //添加对象
+                $("#tbody-add").append(tr);
+              });
+              //显示第data.data页
+              initPages(data.data);
+            }
+          }
+        })
+      }
+
+
+
+      $(function () {
+        getPageData(nowPage,pageSize);
+
+      })
+
+    </script>
+  </body>
+</html>

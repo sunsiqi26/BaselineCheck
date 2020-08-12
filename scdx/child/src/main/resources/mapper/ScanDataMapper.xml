@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gxa.child.dao.ScanDataMapper">
+
+    <resultMap type="com.gxa.child.pojo.ScanData" id="ScanDataMap">
+        <result property="id" column="id" jdbcType="OTHER"/>
+        <result property="boardId" column="board_id" jdbcType="VARCHAR"/>
+        <result property="typeCode" column="type_code" jdbcType="INTEGER"/>
+        <result property="data" column="data" jdbcType="OTHER"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap type="com.gxa.child.pojo.ScanData" id="One2Map">
+        <result property="id" column="id" jdbcType="OTHER"/>
+        <result property="boardId" column="board_id" jdbcType="VARCHAR"/>
+        <result property="typeCode" column="type_code" jdbcType="INTEGER"/>
+        <result property="data" column="data" jdbcType="OTHER"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+        <!--    一对一查询    -->
+        <association property="type" column="type_code" javaType="com.gxa.child.pojo.Type"
+                     select="com.gxa.child.dao.TypeMapper.queryByTypeCode"/>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="ScanDataMap">
+        select
+          id, board_id, type_code, data, create_time
+        from scdx.scan_data
+        where id = #{id}
+    </select>
+
+    <!--查询指定行数据-->
+    <select id="queryAllByLimit" resultMap="ScanDataMap">
+        select
+          id, board_id, type_code, data, create_time
+        from scdx.scan_data
+        limit #{offset}, #{limit}
+    </select>
+
+    <!--通过实体作为筛选条件查询-->
+    <select id="queryAll" resultMap="One2Map">
+        select
+          id, board_id, type_code, create_time
+        from scdx.scan_data
+        <where>
+            is_deleted=0
+            <if test="conditionVo.boardId != null and conditionVo.boardId != ''">
+                and board_id = #{conditionVo.boardId}
+            </if>
+            <if test="conditionVo.typeCode != null">
+                and type_code = #{conditionVo.typeCode}
+            </if>
+            <if test="conditionVo.startTime != null">
+                and create_time &gt;= #{conditionVo.startTime}
+            </if>
+            <if test="conditionVo.endTime != null">
+                and create_time &lt;= #{conditionVo.endTime}
+            </if>
+        </where>
+    </select>
+<!--  通过主板ID查询相关扫描类型  -->
+    <select id="queryScanTypeByBoardId" resultType="com.gxa.child.pojo.Type">
+        select sd.type_code, t.type_name from scdx.scan_data sd
+        LEFT JOIN scdx.type t ON t.type_code = sd.type_code
+        WHERE sd.board_id = #{boardId} GROUP BY sd.type_code
+
+    </select>
+<!--  显示已检测主机数量  -->
+    <select id="countByBoardId" resultType="java.lang.Integer">
+SELECT COUNT(*) FROM (SELECT COUNT(*) FROM scan_data WHERE is_deleted=0 GROUP BY board_id) AS T
+    </select>
+<!--  显示已检测类型数量  -->
+    <select id="countByTypeCode" resultType="java.lang.Integer">
+SELECT COUNT(*) FROM (SELECT COUNT(*) FROM scan_data WHERE is_deleted=0 GROUP BY type_code) AS T
+    </select>
+<!--  显示已检测总数  -->
+    <select id="countAll" resultType="java.lang.Integer">
+SELECT COUNT(*) FROM (SELECT COUNT(*) FROM scan_data WHERE is_deleted=0 GROUP BY id) AS T
+    </select>
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into scdx.scan_data(board_id, type_code, data, create_time)
+        values (#{boardId}, #{typeCode}, #{data}, #{createTime})
+    </insert>
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update scdx.scan_data
+        <set>
+            <if test="boardId != null and boardId != ''">
+                board_id = #{boardId},
+            </if>
+            <if test="typeCode != null">
+                type_code = #{typeCode},
+            </if>
+            <if test="data != null">
+                data = #{data},
+            </if>
+            <if test="createTime != null">
+                create_time = #{createTime},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--通过主键删除-->
+    <delete id="deleteById">
+        delete from scdx.scan_data where id = #{id}
+    </delete>
+
+    <!--通过主键数组删除数据-->
+    <update id="deleteAllByPk">
+        update scan_data set is_deleted=1
+        where id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+</mapper>

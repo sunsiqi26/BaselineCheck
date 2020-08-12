@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.gxa.child.dao.AdminMapper">
+    <insert id="save">
+        insert into user ( admin_name, admin_pwd, admin_phone, create_time)
+        values (#{admin.adminName},#{admin.adminPwd},#{admin.adminPhone},#{admin.createTime});
+    </insert>
+    <update id="update">
+        update user
+        <set>
+            <if test="admin.adminName != null">
+                admin_name=#{admin.adminName},
+            </if>
+            <if test="admin.adminPwd != null">
+                admin_pwd=#{admin.adminPwd},
+            </if>
+            <if test="admin.adminPhone != null">
+                admin_phone=#{admin.adminPhone},
+            </if>
+            <if test="admin.adminStatus != null">
+                admin_status=#{admin.adminStatus},
+            </if>
+            <if test="admin.isDeleted != null">
+                is_deleted=#{admin.idDeleted},
+            </if>
+            <if test="admin.lastLoginTime != null">
+                last_login_time=#{admin.lastLoginTime},
+            </if>
+            <if test="admin.isAdmin != null">
+                is_admin=#{admin.isAdmin},
+            </if>
+        </set>
+        where id=#{admin.id}
+    </update>
+    <delete id="deleteByPk">
+        delete from user where id=#{id}
+    </delete>
+    <update id="deleteAll">
+        update user set is_deleted=1 where id in
+        <foreach collection="str" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+
+    <select id="findAll" resultType="com.gxa.child.pojo.Admin">
+        select id,admin_name,admin_phone,admin_status,create_time,is_admin from user where is_deleted=0
+    </select>
+    <select id="findByName" resultType="com.gxa.child.pojo.Admin">
+        select id,admin_name, admin_pwd, admin_phone, admin_status,last_login_time,is_admin from user
+        where admin_name=#{adminName} and is_deleted=0
+    </select>
+    <select id="findById" resultType="com.gxa.child.pojo.Admin">
+        select id,admin_name, admin_pwd, admin_phone, last_login_time,is_admin from user
+        where id=#{id} and is_deleted=0
+    </select>
+    <select id="search" resultType="com.gxa.child.pojo.Admin">
+        select id,admin_name,admin_phone,admin_status,create_time,last_login_time,is_admin from user
+        <where>
+            is_deleted=0
+            <if test="conditionVo.keywords != null and conditionVo.keywords != ''">
+                and admin_name like #{conditionVo.keywords}
+            </if>
+            <if test="conditionVo.startTime != null">
+                and create_time &gt;=#{conditionVo.startTime}
+            </if>
+            <if test="conditionVo.endTime != null">
+                and create_time &lt;=#{conditionVo.endTime}
+            </if>
+        </where>
+    </select>
+
+</mapper>

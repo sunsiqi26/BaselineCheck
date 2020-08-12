@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>服务信息</title>
+        <meta name="renderer" content="webkit">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta name="viewport" content="width=device-width,user-scalable=yes, minimum-scale=0.4, initial-scale=0.8,target-densitydpi=low-dpi" />
+        <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+        <link rel="stylesheet" href="/css/font.css">
+        <link rel="stylesheet" href="/css/xadmin.css">
+        <script type="text/javascript" src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+        <script type="text/javascript" src="/lib/layui/layui.js" charset="utf-8"></script>
+        <script type="text/javascript" src="/js/xadmin.js"></script>
+        <!-- 让IE8/9支持媒体查询，从而兼容栅格 -->
+        <!--[if lt IE 9]>
+        <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
+        <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
+    </head>
+    <body>
+    <div class="x-body layui-anim layui-anim-up">
+        <fieldset class="layui-elem-field" style="height: 1500px;overflow:hidden;">
+
+            <legend>服务信息</legend>
+            <div class="layui-field-box" id="tbody-add" >
+                <h3>无线局域网适配器  无线网络连接：</h3>
+                <table class="layui-table">
+                    <tbody>
+                    <tr>
+                        <th>IPV4地址</th>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th>子网掩码</th>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th>MAC地址</th>
+                        <td></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </fieldset>
+    </div>
+    </body>
+    <style>
+        th{
+            color: rgb(0, 150, 136);
+            width: 200px;
+        }
+
+    </style>
+
+    <script>
+        //获取传递的id
+        let id = "[[${#request.getParameter('id')}]]";
+
+        $(function () {
+            //获取数据列表
+            $.ajax({
+                type: "post",
+                url: "/scanData/scanDetail",
+                data: {id:id},
+                dataType: "json",
+                success: function (data) {
+                    // console.log(data);
+                    if (data.code === 200) {
+                        //将详情转换成标准的json格式
+                        let strData = data.data.data;
+                        strData = strData.replace(/'/g,"\"");
+                        // console.log(strData);
+                        let jsonData = jQuery.parseJSON(strData);
+
+                        //清空对象
+                        $("#tbody-add").empty();
+                        //遍历json对象
+                        for (let item in jsonData){
+                            tr = '<h3>'+jsonData[item]['caption']+'</h3>\n' +
+                                '<table class="layui-table">\n' +
+                                '<tbody><tr>\n' +
+                                '<th>路径名</th>\n' +
+                                '<td colspan="3">'+jsonData[item]['pathName']+'</td>\n' +
+                                '</tr><tr>\n' +
+                                '<th>描述</th>\n' +
+                                '<td colspan="3">'+jsonData[item]['description']+'</td>\n' +
+                                '</tr><tr>\n' +
+                                '<th>已启动</th>\n' +
+                                '<td>'+jsonData[item]['started']+'</td>\n' +
+                                // '</tr><tr>\n' +
+                                '<th>启动模式</th>\n' +
+                                '<td>'+jsonData[item]['startMode']+'</td>\n' +
+                                '</tr><tr>\n' +
+                                '<th>状态（state）</th>\n' +
+                                '<td>'+jsonData[item]['state']+'</td>\n' +
+                                // '</tr><tr>\n' +
+                                '<th>状态（status）</th>\n' +
+                                '<td>'+jsonData[item]['status']+'</td>\n' +
+                                '</tr><tr>\n' +
+                                '<th>接受暂停</th>\n' +
+                                '<td>'+jsonData[item]['acceptPause']+'</td>\n' +
+                                // '</tr><tr>\n' +
+                                '<th>接受关闭</th>\n' +
+                                '<td>'+jsonData[item]['acceptStop']+'</td>\n' +
+                                '</tr><tr>\n' +
+                                '<th>延迟自动启动</th>\n' +
+                                '<td>'+jsonData[item]['delayAutoStart']+'</td>\n' +
+                                // '</tr><tr>\n' +
+                                '<th>错误控制</th>\n' +
+                                '<td>'+jsonData[item]['errorControl']+'</td>\n' +
+                                '</tr><tr>\n' +
+                                '<th>退出码</th>\n' +
+                                '<td>'+jsonData[item]['exitCode']+'</td>\n' +
+                                // '</tr><tr>\n' +
+                                '<th>服务特定退出码</th>\n' +
+                                '<td>'+jsonData[item]['serviceSpecificExitCode']+'</td>\n' +
+                                '</tr><tr>\n' +
+                                '<th>创建类名称</th>\n' +
+                                '<td>'+jsonData[item]['creationClassName']+'</td>\n' +
+                                // '</tr><tr>\n' +
+                                '<th>系统创建类名称</th>\n' +
+                                '<td>'+jsonData[item]['systemCreationClassName']+'</td>\n' +
+                                '</tr></tbody>\n' +
+                                '</table>';
+                            //添加对象
+                            $("#tbody-add").append(tr);
+                        }
+
+                        var maxlength = $("#tbody-add").height();
+                        $(".layui-elem-field").css("max-height",maxlength+100+"px");
+                    }
+                }
+            })
+        })
+
+        //自动增长
+        $(window).scroll(function () {
+            var srollPos = $(window).scrollTop()+10;    //滚动条距顶部距离(页面超出窗口的高度)
+            if (srollPos>=$(document).height()-$(window).height()) {
+                h = $(".layui-elem-field").height();
+                h += 600;
+                $(".layui-elem-field").height(h+"px");
+            }
+        });
+    </script>
+</html>

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>主机信息</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width,user-scalable=yes, minimum-scale=0.4, initial-scale=0.8,target-densitydpi=low-dpi" />
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="/css/font.css">
+    <link rel="stylesheet" href="/css/xadmin.css">
+    <script type="text/javascript" src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+    <script type="text/javascript" src="/lib/layui/layui.js" charset="utf-8"></script>
+    <script type="text/javascript" src="/js/xadmin.js"></script>
+    <!-- 让IE8/9支持媒体查询，从而兼容栅格 -->
+    <!--[if lt IE 9]>
+    <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
+    <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+<div class="x-body layui-anim layui-anim-up">
+    <fieldset class="layui-elem-field">
+        <legend>主机信息</legend>
+        <div class="layui-field-box" id="tbody-add">
+
+        </div>
+    </fieldset>
+</div>
+</body>
+<style>
+    th{
+        color: rgb(0, 150, 136);
+        width: 200px;
+    }
+
+</style>
+
+<script>
+    //获取传递的id
+    let id = "[[${#request.getParameter('id')}]]";
+
+    $(function () {
+        //获取数据列表
+        $.ajax({
+            type: "post",
+            url: "/scanData/scanDetail",
+            data: {id:id},
+            dataType: "json",
+            success: function (data) {
+                // console.log(data);
+                if (data.code === 200) {
+                    //将详情转换成标准的json格式
+                    let strData = data.data.data;
+                    strData = strData.replace(/'/g,"\"");
+                    //console.log(strData);
+                    let jsonData = jQuery.parseJSON(strData);
+
+                    //清空对象
+                    $("#tbody-add").empty();
+
+                    //输出对象
+                    for (let key in jsonData){
+                        if(key!=='自启动项'  && key!=='更新补丁' ){
+                            let tr = $(
+                                '<table class="layui-table">\n' +
+                                '<tbody>\n' +
+                                '<tr>\n' +
+                                '     <th>'+key+'</th>\n' +
+                                '     <td>'+jsonData[key]+'</td></tr>\n' +
+                                '<tr>'+
+                                '</tbody>\n' +
+                                '</table>'
+                            );
+                            //添加对象
+                            $("#tbody-add").append(tr);
+                        }
+                    }
+
+                    //获取自启动项对象内容
+                    var temp = "";
+                    for(var i in jsonData['自启动项']){//用javascript的for/in循环遍历对象的属性
+                        temp += i+":"+jsonData['自启动项'][i]+",";
+                    }
+                    var num=[];
+                    num = temp.split(",");
+                    //输出自启动项内容
+                    let tr = $(
+                        '<table class="layui-table">\n' +
+                        '<tbody>\n' +
+                        '    <tr><th>自启动项</th> </tr>\n' +
+                        '</tbody>\n' +
+                        '</table>'
+                    );
+                    $("#tbody-add").append(tr);
+
+                    for(let i=0;i<num.length-1;i++){
+                        let tr = $(
+                            '<table class="layui-table">\n' +
+                            '<tbody>\n' +
+                            '    <tr> <td>'+num[i]+'</td>  </tr>\n' +
+                            '</tbody>\n' +
+                            '</table>'
+                        );
+                        $("#tbody-add").append(tr);
+                    }
+
+                    //输出更新补丁详细信息
+                        let tw = $(
+                            '<table class="layui-table">\n' +
+                            '<tbody>\n' +
+                            '    <tr><th>更新补丁</th> </tr>\n' +
+                            '</tbody>\n' +
+                            '</table>'
+                        );
+                        $("#tbody-add").append(tw);
+
+                        for(let i=0;i<jsonData['更新补丁总数'];i++){
+                            let tr = $(
+                                '<table class="layui-table">\n' +
+                                '<tbody>\n' +
+                                '    <tr> <td>'+jsonData['更新补丁'][i]+'</td>  </tr>\n' +
+                                '</tbody>\n' +
+                                '</table>'
+                            );
+                            $("#tbody-add").append(tr);
+                    }
+
+
+                }
+            }
+        })
+    })
+
+</script>
+</html>

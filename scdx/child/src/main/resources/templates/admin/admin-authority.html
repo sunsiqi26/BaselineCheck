@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+  
+  <head>
+    <meta charset="UTF-8">
+    <title>查看管理员</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width,user-scalable=yes, minimum-scale=0.4, initial-scale=0.8,target-densitydpi=low-dpi" />
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="/css/font.css">
+    <link rel="stylesheet" href="/css/xadmin.css">
+    <script type="text/javascript" src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+    <script type="text/javascript" src="/lib/layui/layui.js" charset="utf-8"></script>
+    <script type="text/javascript" src="/js/xadmin.js"></script>
+    <!-- 让IE8/9支持媒体查询，从而兼容栅格 -->
+    <!--[if lt IE 9]>
+      <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
+      <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  
+  <body>
+    <div class="x-nav">
+      <span class="layui-breadcrumb">
+        <a href="/welcome">首页</a>
+        <a href="">管理员管理</a>
+        <a>
+          <cite>权限管理</cite></a>
+      </span>
+      <a class="layui-btn layui-btn-small" style="line-height:1.6em;margin-top:3px;float:right" href="javascript:location.replace(location.href);" title="刷新">
+        <i class="layui-icon" style="line-height:30px">ဂ</i></a>
+    </div>
+    <div class="x-body">
+      <div class="layui-row">
+        <form class="layui-form layui-col-md12 x-so">
+          <input class="layui-input" placeholder="开始日（加入日期）" name="start" id="start">
+          <input class="layui-input" placeholder="截止日（加入日期）" name="end" id="end">
+          <input type="text" name="username"  placeholder="请输入用户名" autocomplete="off" class="layui-input">
+          <button class="layui-btn"  lay-submit="" lay-filter="search"><i class="layui-icon">&#xe615;</i></button>
+        </form>
+      </div>
+
+      <span class="x-right" style="line-height:40px">共有数据：<span id="total"></span> 条</span>
+
+      <table class="layui-table">
+        <thead>
+          <tr id="t-head">
+            <th>ID</th>
+            <th>登录名</th>
+            <th>手机</th>
+            <th>最后登录时间</th>
+            <th>加入时间</th>
+            <th>用户身份</th>
+            <script>
+              isAdmin = '[[${session.admin.isAdmin}]]';
+              if(isAdmin == 1){
+                let hd=$('<th>修改权限</th>');
+                $("#t-head").append(hd);
+              }
+            </script>
+
+        </thead>
+        <tbody id="tbody-add">
+          <tr>
+            <td>
+              <div class="layui-unselect layui-form-checkbox" lay-skin="primary" data-id='2'><i class="layui-icon">&#xe605;</i></div>
+            </td>
+            <td>1</td>
+            <td>admin</td>
+            <td>18925139194</td>
+            <td>超级管理员</td>
+            <td>2017-01-01 11:11:42</td>
+            <td class="td-status">
+              <span class="layui-btn layui-btn-normal layui-btn-mini">已启用</span></td>
+            <td class="td-manage">
+              <a onclick="member_stop(this,'10001')" href="javascript:;"  title="启用">
+                <i class="layui-icon">&#xe601;</i>
+              </a>
+              <a title="编辑"  onclick="x_admin_show('编辑','/admin/adminEdit')" href="javascript:;">
+                <i class="layui-icon">&#xe642;</i>
+              </a>
+              <a title="删除" onclick="member_del(this,'要删除的id')" href="javascript:;">
+                <i class="layui-icon">&#xe640;</i>
+              </a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="page">
+        <div>
+          <a class="prev" href="">&lt;&lt;</a>
+          <a class="num" href="">1</a>
+          <span class="current">2</span>
+          <a class="num" href="">3</a>
+          <a class="num" href="">489</a>
+          <a class="next" href="">&gt;&gt;</a>
+        </div>
+      </div>
+
+    </div>
+    <script>
+      layui.use(['laydate','form'], function(){
+        var laydate = layui.laydate;
+        let form = layui.form;
+
+        //执行一个laydate实例
+        laydate.render({
+          elem: '#start' //指定元素
+        });
+
+        //执行一个laydate实例
+        laydate.render({
+          elem: '#end' //指定元素
+        });
+
+        form.on('submit(search)', function(data){
+          getPageData(1,pageSize);
+          return false;
+        });
+
+      });
+
+       /*用户-改变权限*/
+      function member_stop(obj,id){
+        let nowStatus=1;
+        layer.confirm('确认要改变吗？',function(index){
+          if($(obj).attr('title')=='设为管理员'){
+            $(obj).attr('title','设为普通用户')
+            $(obj).find('i').html('&#xe612;');
+            nowStatus=1;
+
+            $(obj).parents("tr").find(".td-status").html('管理员');
+          }
+          else{
+            $(obj).attr('title','设为管理员')
+            $(obj).find('i').html('&#xe66f;');
+            nowStatus=0;
+
+            $(obj).parents("tr").find(".td-status").html('普通用户');
+          }
+          $.ajax({
+            type:"post",
+            url:"/admin/Change",
+            data:{id:id,isAdmin:nowStatus},
+            dataType:"json",
+            success:function (res) {
+              layer.alert(res.msg, {icon: res.code===200 ? 6:5});
+            }
+          })
+        });
+      }
+
+
+      //########################################分页代码#################################################
+      let nowPage = 1;
+      let pageSize = 5;
+
+      //初始化分页
+      function initPages(data) {
+        let div = $("<div></div>");
+        let pre = $('<a class="prev" pre-page="'+data.prePage+'" has-prev-page="'+data.hasPreviousPage+'" href="javascript:prePage();">&lt;&lt;</a>');
+        div.append(pre);
+        // 动态的渲染页数
+        $(data.navigatepageNums).each(function () {
+          let pageA;
+          //如果当前正显示此页
+          if(data.pageNum == this){
+            pageA = $('<span class="current">'+this+'</span>');
+          }else{
+            pageA = $('<a class="num" href="javascript:changePage('+this+');">'+this+'</a>');
+          }
+          div.append(pageA);
+        });
+        let next = $('<a class="next" next-page="'+data.nextPage+'" has-next-page="'+data.hasNextPage+'" href="javascript:nextPage();">&gt;&gt;</a>');
+        div.append(next);
+        $(".page").empty();
+        $(".page").append(div);
+      }
+
+      //上一页
+      function prePage(){
+        let hasPrevPage = $(".prev").attr("has-prev-page");
+        let prevPageNum = $(".prev").attr("pre-page");
+
+        if(hasPrevPage === "true"){
+          getPageData(prevPageNum, pageSize);
+        }else{
+          layer.msg("已在首页");
+        }
+      }
+
+      //下一页
+      function nextPage() {
+        let hasNextPage = $(".next").attr("has-next-page");
+        let nextPageNum = $(".next").attr("next-page");
+
+        if(hasNextPage === "true"){
+          getPageData(nextPageNum, pageSize);
+        }else{
+          layer.msg("已在末尾");
+        }
+      }
+
+      //中间页跳转
+      function changePage(page) {
+        getPageData(page, pageSize);
+      }
+
+      //获取查询条件
+      function getCondition() {
+        let data = {};
+        // 获取开始时间
+        let startTime = $("#start").val();
+        if(startTime.length > 0)
+          data.startTime = startTime+" 00:00:00";
+        // 获取结束时间
+        let endTime = $("#end").val();
+        if(endTime.length > 0)
+          //按照一般逻辑+23:59:59取到当天数据
+          data.endTime = endTime+" 23:59:59";
+        // 获取关键字
+        let adminName = $("input[name=username]").val();
+        if(adminName.length > 0)
+          data.keywords = adminName;
+        return data;
+      }
+      //查询数据的方法
+      function getPageData(page, pageSize) {
+        let condition = getCondition();
+        // 加上分页条件
+        condition.page = page;
+        condition.pageSize = pageSize;
+        //获取数据列表
+        $.ajax({
+          type: "post",
+          url: "/admin/List",
+          data: condition,
+          dataType: "json",
+          success: function (data) {
+            if (data.code === 200) {
+              //显示总条数
+              $("#total").text(data.data.total);
+              //获取当前页
+              nowPage = data.data.pageNum;
+              //清空对象
+              $("#tbody-add").empty();
+              isAdmin = '[[${session.admin.isAdmin}]]';
+              //遍历返回数据，生成搜索结果列表
+              if (isAdmin == 1) {
+                $(data.data.list).each(function () {
+                  let tr = $('<tr>\n' +
+                          '            <td>' + this.id + '</td>\n' +
+                          '            <td>' + this.adminName + '</td>\n' +
+                          '            <td>' + this.adminPhone + '</td>\n' +
+                          '            <td>' + (this.lastLoginTime ? this.lastLoginTime : "未登录") + '</td>\n' +
+                          '            <td>' + this.createTime + '</td>\n' +
+                          '            <td class="td-status">\n' +
+                          (this.isAdmin == 1 ? "管理员" : "普通用户") + '</td>\n' +
+                          '            <td class="td-manage">\n' +
+                          '            <a onclick="member_stop(this,' + this.id + ')" href="javascript:;"  title="' +
+                          (this.isAdmin == 1 ? "设为普通用户" : "设为管理员") + '">\n' +
+                          '            <i class="layui-icon">' +
+                          (this.isAdmin == 1 ? "&#xe612;" : "&#xe66f;") +
+                          '            </i>\n' +
+                          '            </a>\n' +
+                          '            </td>\n' +
+                          '          </tr>');
+                  //添加对象
+                  $("#tbody-add").append(tr);
+                });
+              } else {
+                $(data.data.list).each(function () {
+                  let tr = $('<tr>\n' +
+                          '            <td>' + this.id + '</td>\n' +
+                          '            <td>' + this.adminName + '</td>\n' +
+                          '            <td>' + this.adminPhone + '</td>\n' +
+                          '            <td>' + (this.lastLoginTime ? this.lastLoginTime : "未登录") + '</td>\n' +
+                          '            <td>' + this.createTime + '</td>\n' +
+                          '            <td class="td-status">\n' +
+                          (this.isAdmin == 1 ? "管理员" : "普通用户") + '</td>\n' +
+                          '          </tr>');
+                  //添加对象
+                  $("#tbody-add").append(tr);
+                });
+              }
+              //显示第data.data页
+              initPages(data.data);
+            }
+          }
+        })
+      }
+      $(function () {
+        getPageData(nowPage, pageSize);
+
+      })
+    </script>
+  </body>
+</html>
